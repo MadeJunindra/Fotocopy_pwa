@@ -48,12 +48,14 @@ button{font-family:inherit}
 /* ---------- Header ---------- */
 header{position:relative;overflow:hidden;color:#f4efe6;
   background:radial-gradient(120% 140% at 100% 0%,#2a4064 0%,transparent 55%),linear-gradient(160deg,var(--navy-2),var(--navy-1));
-  padding:max(18px,env(safe-area-inset-top)) 20px 64px;border-radius:0 0 28px 28px}
+  padding:calc(env(safe-area-inset-top, 0px) + 22px) 20px 64px;border-radius:0 0 28px 28px}
 header::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;
   border:1px solid rgba(215,182,121,.25);box-shadow:0 0 0 30px rgba(215,182,121,.05),0 0 0 60px rgba(215,182,121,.03)}
 .brand{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
 .brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--gold-2),#a07a40);display:grid;place-items:center;color:#0e1a2b;font:700 15px var(--serif)}
-.brand h1{margin:0;font:600 19px/1.1 var(--serif);letter-spacing:.2px}
+.brand h1{margin:0;font:600 clamp(16px,4.6vw,19px)/1.1 var(--serif);letter-spacing:.2px;white-space:nowrap}
+.brand>div:first-child{min-width:0}
+.sync-pill{flex:none}
 .brand small{display:block;font:500 12px var(--sans);color:rgba(244,239,230,.6);margin-top:2px}
 .hero{position:relative;z-index:1;margin-top:22px}
 .hero .label{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold-2);font-weight:700}
@@ -68,7 +70,7 @@ main{max-width:720px;margin:-44px auto 0;padding:0 16px 120px;position:relative;
 .card h2{margin:0 0 4px;font:600 20px var(--serif);color:var(--ink)}
 .card .desc{margin:0 0 16px;color:var(--muted);font-size:13px}
 label{display:block;font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
-input,select{width:100%;min-width:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--text);font:600 15px var(--sans);transition:border-color .15s,box-shadow .15s,background .15s;appearance:none;-webkit-appearance:none}
+input,select{width:100%;min-height:46px;min-width:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--text);font:600 15px var(--sans);transition:border-color .15s,box-shadow .15s,background .15s;appearance:none;-webkit-appearance:none}
 select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 52%,calc(100% - 13px) 52%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
 input:focus,select:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 18%,transparent);background:var(--card)}
 input::placeholder{color:var(--muted);font-weight:500}
@@ -141,7 +143,7 @@ nav.tabs button.fab.active{box-shadow:0 0 0 3px rgba(215,182,121,.3)}
 #preview{width:100%;height:auto;border-radius:12px;border:1px solid var(--line);background:#fff;display:block}
 .toast{position:fixed;left:50%;bottom:100px;transform:translate(-50%,10px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:700;font-size:13.5px;opacity:0;transition:.25s;pointer-events:none;z-index:30;box-shadow:var(--shadow-lg)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
-.update-bar{position:fixed;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:40;display:none;align-items:center;gap:12px;background:var(--card);color:var(--text);border:1px solid var(--gold);padding:10px 10px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);font-weight:700;font-size:13.5px;width:max-content;max-width:calc(100% - 32px)}
+.update-bar{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 10px);left:50%;transform:translateX(-50%);z-index:40;display:none;align-items:center;gap:12px;background:var(--card);color:var(--text);border:1px solid var(--gold);padding:10px 10px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);font-weight:700;font-size:13.5px;width:max-content;max-width:calc(100% - 32px)}
 .update-bar.show{display:flex}
 .brand{justify-content:space-between}
 .brand>div:first-child{display:flex;align-items:center;gap:10px}
@@ -210,6 +212,8 @@ nav.tabs button.fab.active{box-shadow:0 0 0 3px rgba(215,182,121,.3)}
 .exp-meta{font-size:12px;color:var(--muted);margin-top:2px}
 .exp-right{text-align:right;flex:none}
 .exp-val{font:600 16px var(--serif);color:var(--danger);margin-bottom:4px}
+.more-note{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--gold-soft);color:var(--text)}
+.linkbtn{border:0;background:none;padding:0;font:700 12px var(--sans);color:var(--gold);text-decoration:underline;cursor:pointer}
 .divider{height:1px;background:var(--line);margin:16px 0}
 nav.tabs button{padding:8px 13px}
 .version{text-align:center;color:var(--muted);font-size:11.5px;margin-top:6px}
@@ -246,7 +250,7 @@ nav.tabs button{padding:8px 13px}
           <button class="chip" data-st="sudah" aria-pressed="false">Sudah dibayar</button>
         </div>
         <input type="hidden" id="fStatus" value="">
-        <div class="full"><input id="fMonth" type="month" title="Filter bulan" aria-label="Filter bulan"></div>
+        <div class="full"><label for="fMonth">Filter bulan</label><input id="fMonth" type="month" title="Filter bulan"></div>
       </div>
       <div class="list-head">
         <span class="hint" id="listInfo"></span>
@@ -302,7 +306,7 @@ nav.tabs button{padding:8px 13px}
         <button class="chip" data-p="tahun" aria-pressed="false">Tahun ini</button>
         <button class="chip" data-p="semua" aria-pressed="false">Semua</button>
       </div>
-      <div style="margin-top:10px"><input id="i-month" type="month" aria-label="Pilih bulan lain"></div>
+      <div style="margin-top:12px"><label for="i-month">Atau pilih bulan lain</label><input id="i-month" type="month"></div>
     </div>
 
     <div class="kpis">

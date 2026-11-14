@@ -170,6 +170,10 @@ function renderExpenses(ex) {
       <div class="exp-right"><div class="exp-val">−${rp(t.jumlah)}</div>
         <div><button class="btn sm ghost" data-xedit="${t.id}">Edit</button> <button class="btn sm danger" data-xdel="${t.id}">Hapus</button></div></div>
     </div>`).join('') : '<p class="hint">Belum ada pengeluaran di periode ini.</p>';
+  const lain = expenses.length - ex.length;
+  if (lain > 0) I('expList').insertAdjacentHTML('beforeend',
+    `<p class="hint more-note">+${lain} pengeluaran lain di luar periode ini. <button type="button" class="linkbtn" id="showAllExp">Tampilkan semua</button></p>`);
+  const b = I('showAllExp'); if (b) b.onclick = () => document.querySelector('#periodChips [data-p=semua]').click();
 }
 function resetExpForm() {
   I('x-id').value = ''; I('x-tgl').value = today(); I('x-ket').value = ''; I('x-jumlah').value = '';
