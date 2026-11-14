@@ -2,7 +2,7 @@
 const VERSION = '__APP_VERSION__';
 const CACHE = 'fotokopi-' + VERSION;
 const FILES = [
-  './', './index.html', './app.js', './sync.js', './jspdf.umd.min.js', './manifest.json',
+  './', './index.html', './app.js', './income.js', './sync.js', './jspdf.umd.min.js', './manifest.json',
   './icon.svg', './icon-192.png', './icon-512.png',
   './fonts/plus-jakarta-sans-latin-400-normal.woff2', './fonts/plus-jakarta-sans-latin-500-normal.woff2',
   './fonts/plus-jakarta-sans-latin-600-normal.woff2', './fonts/plus-jakarta-sans-latin-700-normal.woff2',

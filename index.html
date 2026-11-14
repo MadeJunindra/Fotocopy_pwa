@@ -156,6 +156,62 @@ nav.tabs button.fab.active{box-shadow:0 0 0 3px rgba(215,182,121,.3)}
 .steps li{margin-bottom:6px}
 .steps code{background:var(--bg-2);padding:1px 6px;border-radius:6px;font-size:12.5px}
 .status-line{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--line);font-size:13.5px;font-weight:600;margin-bottom:12px}
+/* ---------- Pendapatan ---------- */
+.period-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px}
+.period-head h2{margin:0}
+.period-head span{font-weight:700;color:var(--gold);font-size:13.5px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);min-width:0}
+.kpi small{display:block;font-size:11px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted)}
+.kpi b{display:block;font:600 clamp(16px,5.2vw,24px)/1.2 var(--serif);color:var(--ink);margin:6px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi span{font-size:12px;color:var(--muted)}
+.kpi.out b{color:var(--danger)}
+.kpi.hero{grid-column:1/-1;color:#f4efe6;border:0;background:radial-gradient(120% 160% at 100% 0%,#2a4064 0%,transparent 55%),linear-gradient(150deg,var(--navy-2),var(--navy-1))}
+.kpi.hero small{color:var(--gold-2)}
+.kpi.hero b{color:#f4efe6;font-size:34px}
+.kpi.hero span{color:rgba(244,239,230,.7)}
+.kpi.hero .formula{display:block;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1);font-size:12.5px}
+.neg{color:var(--danger)!important}
+.kpi.hero b.neg{color:#f6a39b!important}
+.cash{display:grid;grid-template-columns:1fr;gap:0}
+.cash-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.cash-row:last-child{border-bottom:0;font-weight:800}
+.cash-row b{font:600 16px var(--serif);color:var(--ink);white-space:nowrap}
+.cash-row span{padding-right:10px}
+.cash-row .ok{color:var(--ok)} .cash-row .warn{color:var(--warn)}
+.chart{position:relative}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .grid.base{stroke:var(--muted);stroke-opacity:.5}
+.chart .ylab{fill:var(--muted);font:600 11px var(--sans);text-anchor:end}
+.chart .xlab{fill:var(--muted);font:600 11px var(--sans);text-anchor:middle}
+.chart .bar{fill:var(--gold)}
+.chart .hit{fill:transparent;cursor:pointer}
+.chart .hit.on{fill:var(--ink);fill-opacity:.05}
+.chart-tip{position:absolute;top:-6px;transform:translateY(-100%);background:var(--ink);color:var(--bg);border-radius:10px;padding:9px 12px;font-size:12.5px;min-width:170px;pointer-events:none;box-shadow:var(--shadow-lg);z-index:3}
+.chart-tip b{display:block;margin-bottom:4px}
+.chart-tip div{display:flex;justify-content:space-between;gap:14px}
+.chart-tip .t-net{border-top:1px solid color-mix(in srgb,var(--bg) 25%,transparent);margin-top:4px;padding-top:4px;font-weight:800}
+.cust{padding:10px 0;border-bottom:1px dashed var(--line)}
+.cust:last-of-type{border-bottom:0}
+.cust-top{display:flex;justify-content:space-between;gap:10px;font-weight:700}
+.cust-name{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cust-val{font:600 15px var(--serif);color:var(--ink);white-space:nowrap}
+.meter{height:6px;border-radius:3px;background:var(--bg-2);margin:7px 0 5px;overflow:hidden}
+.meter i{display:block;height:100%;border-radius:3px;background:var(--gold)}
+.cust-meta{font-size:12px;color:var(--muted)}
+.cust-meta .owe{color:var(--warn);font-weight:700}
+.cats{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.cat{display:inline-flex;gap:8px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:7px 11px;font-size:12.5px;color:var(--muted);font-weight:600}
+.cat b{color:var(--ink)}
+.exp{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px dashed var(--line)}
+.exp:last-child{border-bottom:0}
+.exp-ket{font-weight:700;color:var(--ink);word-break:break-word}
+.exp-meta{font-size:12px;color:var(--muted);margin-top:2px}
+.exp-right{text-align:right;flex:none}
+.exp-val{font:600 16px var(--serif);color:var(--danger);margin-bottom:4px}
+.divider{height:1px;background:var(--line);margin:16px 0}
+nav.tabs button{padding:8px 13px}
 .version{text-align:center;color:var(--muted);font-size:11.5px;margin-top:6px}
 </style>
 </head>
@@ -235,6 +291,71 @@ nav.tabs button.fab.active{box-shadow:0 0 0 3px rgba(215,182,121,.3)}
     <datalist id="orderList"></datalist>
   </section>
 
+  <!-- ========== PENDAPATAN ========== -->
+  <section id="view-income" class="view">
+    <div class="card">
+      <div class="period-head"><h2>Pendapatan</h2><span id="i-range"></span></div>
+      <div class="chips" id="periodChips">
+        <button class="chip" data-p="hari" aria-pressed="false">Hari ini</button>
+        <button class="chip" data-p="bulan" aria-pressed="true">Bulan ini</button>
+        <button class="chip" data-p="bulanlalu" aria-pressed="false">Bulan lalu</button>
+        <button class="chip" data-p="tahun" aria-pressed="false">Tahun ini</button>
+        <button class="chip" data-p="semua" aria-pressed="false">Semua</button>
+      </div>
+      <div style="margin-top:10px"><input id="i-month" type="month" aria-label="Pilih bulan lain"></div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><small>Kotor</small><b id="k-kotor">Rp0</b><span id="k-kotor-sub"></span></div>
+      <div class="kpi out"><small>Pengeluaran</small><b id="k-exp">Rp0</b><span id="k-exp-sub"></span></div>
+      <div class="kpi hero"><small>Pendapatan bersih</small><b id="k-bersih">Rp0</b><span id="k-bersih-sub"></span>
+        <span class="formula">Bersih = Kotor − Pengeluaran</span></div>
+    </div>
+
+    <div class="card">
+      <h2>Arus Kas</h2>
+      <p class="desc">Uang yang benar-benar sudah masuk di periode ini.</p>
+      <div class="cash">
+        <div class="cash-row"><span>Sudah diterima</span><b class="ok" id="c-diterima">Rp0</b></div>
+        <div class="cash-row"><span>Belum dibayar (piutang)</span><b class="warn" id="c-piutang">Rp0</b></div>
+        <div class="cash-row"><span>Kas bersih (diterima − pengeluaran)</span><b id="c-kas">Rp0</b></div>
+      </div>
+    </div>
+
+    <div class="card" id="chartCard">
+      <h2 id="chartTitle">Pendapatan kotor per hari</h2>
+      <p class="desc">Ketuk batang untuk melihat kotor, pengeluaran & bersih.</p>
+      <div class="chart"><div class="chart-tip" id="chartTip" hidden></div><div id="chart"></div></div>
+    </div>
+
+    <div class="card">
+      <h2>Pengeluaran</h2>
+      <p class="desc">Catat biaya usaha agar pendapatan bersih terhitung.</p>
+      <form id="expForm" autocomplete="off">
+        <input type="hidden" id="x-id">
+        <div class="grid">
+          <div><label for="x-tgl">Tanggal</label><input id="x-tgl" type="date" required></div>
+          <div><label for="x-kat">Kategori</label><select id="x-kat"></select></div>
+          <div class="full"><label for="x-ket">Keterangan</label><input id="x-ket" placeholder="mis. Kertas A4 5 rim, Token listrik"></div>
+          <div class="full"><label for="x-jumlah">Jumlah (Rp)</label><input id="x-jumlah" type="number" inputmode="numeric" min="0" step="any" placeholder="0"></div>
+          <div class="full row">
+            <button type="submit" class="btn primary" id="x-save" style="flex:1">Tambah Pengeluaran</button>
+            <button type="button" class="btn ghost" id="x-cancel" hidden>Batal</button>
+          </div>
+        </div>
+      </form>
+      <div class="divider"></div>
+      <div class="cats" id="catSum"></div>
+      <div id="expList"></div>
+    </div>
+
+    <div class="card">
+      <h2>Per Pelanggan</h2>
+      <p class="desc">Pendapatan kotor terbesar & yang masih belum dibayar.</p>
+      <div id="custList"></div>
+    </div>
+  </section>
+
   <!-- ========== EKSPOR ========== -->
   <section id="view-export" class="view">
     <div class="card">
@@ -301,6 +422,8 @@ nav.tabs button.fab.active{box-shadow:0 0 0 3px rgba(215,182,121,.3)}
 <nav class="tabs">
   <button data-view="list" class="active" aria-label="Daftar">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>Daftar</button>
+  <button data-view="income" aria-label="Pendapatan">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Pendapatan</button>
   <button data-view="form" class="fab" aria-label="Tambah">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Tambah</button>
   <button data-view="export" aria-label="Ekspor">
@@ -310,6 +433,7 @@ nav.tabs button.fab.active{box-shadow:0 0 0 3px rgba(215,182,121,.3)}
 
 <script src="jspdf.umd.min.js"></script>
 <script src="app.js"></script>
+<script src="income.js"></script>
 <script src="sync.js"></script>
 </body>
 </html>

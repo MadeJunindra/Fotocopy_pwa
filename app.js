@@ -19,12 +19,25 @@ function persistLocal() {
   try { localStorage.setItem(KEY, JSON.stringify(data)); }
   catch { toast('Gagal menyimpan! Penyimpanan penuh/diblokir.'); }
 }
+/* ----- Pengeluaran (untuk hitung pendapatan bersih) ----- */
+const EXP_KEY = 'fotokopi.pengeluaran.v1';
+let expenses = (() => { try { return JSON.parse(localStorage.getItem(EXP_KEY)) || []; } catch { return []; } })();
+function persistExp() {
+  try { localStorage.setItem(EXP_KEY, JSON.stringify(expenses)); } catch { toast('Gagal menyimpan pengeluaran!'); }
+}
+function saveExp(changed = [], deleted = []) {
+  const now = Date.now();
+  changed.forEach(id => { const t = expenses.find(x => x.id === id); if (t) t.updated = now; });
+  persistExp();
+  if (changed.length || deleted.length) Sync.queueExp(changed, deleted, now);
+  renderAll();
+}
 function loadSettings() { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; } catch { return {}; } }
 function saveSettings(s) { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch {} }
 
 /* ===== Helpers ===== */
 const $ = (s) => document.querySelector(s);
-const rp = (n) => 'Rp' + Math.round(Number(n) || 0).toLocaleString('id-ID');
+const rp = (n) => { const v = Math.round(Number(n) || 0); return (v < 0 ? '−' : '') + 'Rp' + Math.abs(v).toLocaleString('id-ID'); };
 const num = (v) => { const n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : 0; };
 const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
 const BULAN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
@@ -44,6 +57,7 @@ function showView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
   document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   if (name === 'export') drawPreview();
+  if (name === 'income' && typeof renderIncome === 'function') renderIncome();
   window.scrollTo(0, 0);
 }
 document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => {
@@ -199,7 +213,11 @@ function renderDatalists() {
   sel.innerHTML = '<option value="">Semua pelanggan</option>' + names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
   sel.value = names.includes(cur) ? cur : '';
 }
-function renderAll() { renderSummary(); renderDatalists(); renderList(); if ($('#view-export').classList.contains('active')) drawPreview(); }
+function renderAll() {
+  renderSummary(); renderDatalists(); renderList();
+  if ($('#view-export').classList.contains('active')) drawPreview();
+  if (typeof renderIncome === 'function' && $('#view-income').classList.contains('active')) renderIncome();
+}
 
 /* ===== Export (canvas) ===== */
 function exportRows() {
@@ -397,14 +415,21 @@ if (navigator.canShare && navigator.canShare({ files: [new File([''], 'x.jpg', {
 
 /* ===== Backup / Restore / CSV ===== */
 $('#btnBackup').addEventListener('click', () => {
-  download(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }), `backup_fotokopi_${today()}.json`);
+  download(new Blob([JSON.stringify({ transaksi: data, pengeluaran: expenses }, null, 2)], { type: 'application/json' }), `backup_fotokopi_${today()}.json`);
 });
 $('#btnRestore').addEventListener('click', () => $('#fileRestore').click());
 $('#fileRestore').addEventListener('change', async (e) => {
   const file = e.target.files[0]; e.target.value = ''; if (!file) return;
   try {
-    const arr = JSON.parse(await file.text());
+    const raw = JSON.parse(await file.text());
+    const arr = Array.isArray(raw) ? raw : raw.transaksi;
     if (!Array.isArray(arr)) throw 0;
+    if (Array.isArray(raw.pengeluaran)) {
+      const oldX = expenses.map(t => t.id);
+      expenses = raw.pengeluaran.map(t => ({ ...t, id: t.id || uid() }));
+      const xids = new Set(expenses.map(t => t.id));
+      saveExp([...xids], oldX.filter(id => !xids.has(id)));
+    }
     if (!confirm(`Pulihkan ${arr.length} transaksi? Data sekarang (${data.length}) akan diganti.`)) return;
     const old = data.map(t => t.id);
     data = arr.map(t => ({ ...t, id: t.id || uid() }));

@@ -24,7 +24,7 @@ Cukup dilakukan **sekali**. Kira-kira 5 menit.
 ## 3. Impor data lama dari Sheet 4
 1. Muat ulang (refresh) spreadsheet. Di menu atas akan muncul **📄 Fotokopi**.
 2. Pilih **📄 Fotokopi → Impor data lama (dari sheet lain)…**
-3. Ketik `4` (sheet ke-4) atau nama sheet-nya, lalu klik OK, lalu **Ya**.
+3. Ketik **nama tab** data lama persis seperti di bagian bawah layar (misalnya `Sheet4`), atau kosongkan saja untuk dicari otomatis. Lalu klik OK, lalu **Ya**.
 4. Data akan disalin ke sheet baru bernama **Transaksi App**. Sheet 4 Anda **tidak diubah**.
 
 Skrip mencari kolom berdasarkan judulnya: Nama, Order, Rangkap, Isian, Qty, Harga per lembar, Tgl, Status.
@@ -49,3 +49,11 @@ Alamat Web App tetap sama, jadi aplikasi tidak perlu dihubungkan ulang.
 ## Keamanan
 - Alamat Web App dan TOKEN hanya disimpan di HP Anda, **tidak** ikut ke GitHub.
 - Jangan commit `Code.gs` yang sudah berisi kata sandi asli ke GitHub (repo Anda publik). Biarkan file di repo tetap berisi `GANTI-DENGAN-KATA-SANDI-ANDA`.
+
+## Pembaruan: Pengeluaran (untuk halaman Pendapatan)
+Mulai versi ini, pengeluaran juga disimpan di spreadsheet, di sheet **Pengeluaran App**. Caranya:
+1. Di Apps Script, ganti semua kode dengan `Code.gs` terbaru. Ganti lagi `TOKEN` dengan **kata sandi yang sama** seperti sebelumnya, lalu Simpan.
+2. Pilih **Terapkan → Kelola deployment → ✏ Edit → Versi: Versi baru → Terapkan**.
+   Alamat Web App tetap sama, jadi aplikasi tidak perlu dihubungkan ulang.
+
+Sebelum langkah ini dilakukan, pengeluaran tetap tersimpan aman di HP. Status database akan memberi pengingat "perbarui Code.gs".

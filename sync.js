@@ -11,20 +11,27 @@ const Sync = (() => {
   let running = false, again = false, timer = null;
 
   function loadSt() {
-    try { return Object.assign({ url: '', token: '', last: 0, dirty: {}, del: {}, error: '' }, JSON.parse(localStorage.getItem(KEY))); }
-    catch { return { url: '', token: '', last: 0, dirty: {}, del: {}, error: '' }; }
+    try { return Object.assign(blank(), JSON.parse(localStorage.getItem(KEY))); }
+    catch { return blank(); }
   }
+  function blank() { return { url: '', token: '', last: 0, dirty: {}, del: {}, xdirty: {}, xdel: {}, error: '', oldScript: false }; }
   function saveSt() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch {} }
   const configured = () => !!(st.url && st.token);
-  const pending = () => Object.keys(st.dirty).length + Object.keys(st.del).length;
+  const pending = () => Object.keys(st.dirty).length + Object.keys(st.del).length + Object.keys(st.xdirty).length + Object.keys(st.xdel).length;
 
   /** Catat id yang berubah / dihapus, lalu kirim sebentar lagi. */
   function queue(changed, deleted, now) {
     changed.forEach(id => { st.dirty[id] = now; delete st.del[id]; });
     deleted.forEach(id => { st.del[id] = now; delete st.dirty[id]; });
-    saveSt(); render();
-    if (configured()) { clearTimeout(timer); timer = setTimeout(run, 1200); }
+    saveSt(); render(); later();
   }
+  /** Sama seperti queue, untuk data pengeluaran. */
+  function queueExp(changed, deleted, now) {
+    changed.forEach(id => { st.xdirty[id] = now; delete st.xdel[id]; });
+    deleted.forEach(id => { st.xdel[id] = now; delete st.xdirty[id]; });
+    saveSt(); render(); later();
+  }
+  function later() { if (configured()) { clearTimeout(timer); timer = setTimeout(run, 1200); } }
 
   const toWire = (t) => ({ id: t.id, nama: t.nama, order: t.order, rangkap: t.rangkap, isian: t.isian, qty: t.qty,
     harga: t.harga, tgl: t.tgl, status: t.status, updated: t.updated || t.created || 1 });
@@ -36,17 +43,26 @@ const Sync = (() => {
     running = true; render('syncing');
     const sentDirty = { ...st.dirty }, sentDel = { ...st.del };
     const changes = Object.keys(sentDirty).map(id => data.find(t => t.id === id)).filter(Boolean).map(toWire);
+    const sentX = { ...st.xdirty }, sentXDel = { ...st.xdel };
+    const expChanges = Object.keys(sentX).map(id => expenses.find(t => t.id === id)).filter(Boolean)
+      .map(t => ({ id: t.id, tgl: t.tgl, ket: t.ket, kategori: t.kategori, jumlah: t.jumlah, updated: t.updated || t.created || 1 }));
     try {
       const res = await fetch(st.url, {
         method: 'POST', redirect: 'follow',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // tanpa preflight CORS
-        body: JSON.stringify({ token: st.token, changes, deletes: Object.keys(sentDel) }),
+        body: JSON.stringify({ token: st.token, changes, deletes: Object.keys(sentDel), expChanges, expDeletes: Object.keys(sentXDel) }),
       });
       const txt = await res.text();
       let j; try { j = JSON.parse(txt); } catch { throw new Error('Alamat Web App salah atau belum diberi akses "Siapa saja".'); }
       if (!j.ok) throw new Error(j.error || 'Gagal sinkron');
       for (const [id, u] of Object.entries(sentDirty)) if (st.dirty[id] === u) delete st.dirty[id];
       for (const [id, u] of Object.entries(sentDel)) if (st.del[id] === u) delete st.del[id];
+      if (Array.isArray(j.expenses)) {
+        for (const [id, u] of Object.entries(sentX)) if (st.xdirty[id] === u) delete st.xdirty[id];
+        for (const [id, u] of Object.entries(sentXDel)) if (st.xdel[id] === u) delete st.xdel[id];
+        st.oldScript = false;
+        mergeExp(j.expenses);
+      } else st.oldScript = true; // Code.gs lama: pengeluaran tetap aman di perangkat
       merge(j.records || []);
       st.last = Date.now(); st.error = ''; saveSt(); render('ok');
     } catch (e) {
@@ -73,6 +89,19 @@ const Sync = (() => {
     persistLocal(); renderAll();
   }
 
+  function mergeExp(records) {
+    const local = new Map(expenses.map(t => [t.id, t]));
+    const out = [];
+    records.forEach((r, i) => {
+      const l = local.get(r.id); local.delete(r.id);
+      if (st.xdel[r.id]) return;
+      if (st.xdirty[r.id] && l) { out.push(l); return; }
+      out.push({ ...r, created: l?.created ?? i });
+    });
+    for (const [id, l] of local) if (st.xdirty[id]) out.push(l);
+    expenses = out; persistExp();
+  }
+
   /* ---------- UI ---------- */
   const $s = (s) => document.querySelector(s);
   const jam = (ms) => new Date(ms).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -89,6 +118,7 @@ const Sync = (() => {
       else { cls = p ? 'busy' : 'ok'; txt = p ? `${p} menunggu` : 'Tersinkron'; detail = st.last ? `Terakhir sinkron ${jam(st.last)}` : ''; }
     }
     pill.className = 'sync-pill ' + cls; pill.querySelector('span').textContent = txt;
+    if (configured() && st.oldScript) detail += ' · Pengeluaran belum tersimpan ke Sheets: perbarui Code.gs (lihat panduan).';
     info.textContent = detail;
     $s('#syncConnected').hidden = !configured();
     $s('#syncSetup').hidden = configured();
@@ -100,12 +130,13 @@ const Sync = (() => {
     if (!token) { alert('Isi kata sandi (TOKEN) yang sama dengan di Apps Script.'); return; }
     st.url = url; st.token = token; st.error = '';
     data.forEach(t => { if (!st.dirty[t.id]) st.dirty[t.id] = t.updated || t.created || 1; }); // kirim data lama
+    expenses.forEach(t => { if (!st.xdirty[t.id]) st.xdirty[t.id] = t.updated || t.created || 1; });
     saveSt(); await run();
     if (st.error) toast('Gagal: ' + st.error); else toast('Terhubung ke Google Sheets ✓');
   }
   function disconnect() {
     if (!confirm('Putuskan sambungan ke Google Sheets?\nData di perangkat dan di spreadsheet tidak dihapus.')) return;
-    st = { url: '', token: '', last: 0, dirty: {}, del: {}, error: '' }; saveSt(); render();
+    st = blank(); saveSt(); render();
   }
 
   function init() {
@@ -120,6 +151,6 @@ const Sync = (() => {
     render();
     run();
   }
-  return { queue, run, init, configured };
+  return { queue, queueExp, run, init, configured };
 })();
 Sync.init();
