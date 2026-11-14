@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Catatan Fotokopi</title>
+<meta name="theme-color" content="#1f6feb">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+:root{
+  --bg:#f4f6fa; --card:#fff; --text:#1c2430; --muted:#6b7686; --line:#e3e7ee;
+  --primary:#1f6feb; --primary-ink:#fff; --ok:#15803d; --ok-bg:#dcfce7; --warn:#b45309; --warn-bg:#fef3c7; --danger:#dc2626;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0f141b; --card:#18202b; --text:#e6ebf2; --muted:#93a0b2; --line:#2a3442;
+    --primary:#4c8dff; --ok:#4ade80; --ok-bg:#12351f; --warn:#fbbf24; --warn-bg:#3a2a0c; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--primary);color:var(--primary-ink);padding:12px 16px calc(12px) ;padding-top:max(12px,env(safe-area-inset-top))}
+header h1{margin:0;font-size:18px}
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.summary div{background:rgba(255,255,255,.16);border-radius:10px;padding:8px 10px}
+.summary small{display:block;opacity:.85;font-size:12px}
+.summary b{font-size:16px}
+main{max-width:760px;margin:0 auto;padding:12px 16px 96px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.card h2{margin:0 0 10px;font-size:16px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;min-width:0}
+input:focus,select:focus{outline:2px solid var(--primary);outline-offset:-1px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+.btn{border:0;border-radius:8px;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer;background:var(--line);color:var(--text)}
+.btn.primary{background:var(--primary);color:var(--primary-ink)}
+.btn.ok{background:var(--ok);color:#fff}
+.btn.danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.btn.sm{padding:6px 10px;font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.subtotal-box{display:flex;justify-content:space-between;align-items:center;background:var(--bg);border-radius:8px;padding:10px 12px;font-weight:700}
+.tx{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--card)}
+.tx-top{display:flex;justify-content:space-between;gap:8px}
+.tx-name{font-weight:700}
+.tx-order{color:var(--text)}
+.tx-meta{color:var(--muted);font-size:13px}
+.tx-sub{font-weight:700;white-space:nowrap}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;cursor:pointer;border:0}
+.badge.unpaid{background:var(--warn-bg);color:var(--warn)}
+.badge.paid{background:var(--ok-bg);color:var(--ok)}
+.tx-actions{display:flex;gap:6px;margin-top:8px;justify-content:flex-end;align-items:center}
+.tx-actions .badge{margin-right:auto}
+.empty{text-align:center;color:var(--muted);padding:24px}
+.group-date{font-size:13px;font-weight:700;color:var(--muted);margin:14px 2px 6px}
+nav.tabs{position:fixed;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(3,1fr);background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav.tabs button{background:none;border:0;padding:12px 4px;font:inherit;font-size:13px;color:var(--muted);cursor:pointer}
+nav.tabs button.active{color:var(--primary);font-weight:700}
+nav.tabs span{display:block;font-size:20px}
+.view{display:none}.view.active{display:block}
+#preview{width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+.hint{font-size:12px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:8px;opacity:0;transition:.25s;pointer-events:none;z-index:20}
+.toast.show{opacity:1}
+datalist{display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>📄 Catatan Fotokopi</h1>
+  <div class="summary">
+    <div><small>Belum dibayar</small><b id="sumUnpaid">Rp0</b></div>
+    <div><small>Sudah dibayar</small><b id="sumPaid">Rp0</b></div>
+  </div>
+</header>
+
+<main>
+  <!-- ========== TAMBAH / EDIT ========== -->
+  <section id="view-form" class="view">
+    <form id="txForm" class="card" autocomplete="off">
+      <h2 id="formTitle">Tambah Transaksi</h2>
+      <input type="hidden" id="f-id">
+      <div class="grid">
+        <div class="full"><label for="f-nama">Nama</label><input id="f-nama" list="namaList" required placeholder="Nama pelanggan"></div>
+        <div class="full"><label for="f-order">Order</label><input id="f-order" list="orderList" required placeholder="mis. Fotokopi KTP, Print Makalah"></div>
+        <div><label for="f-rangkap">Rangkap</label><input id="f-rangkap" type="number" inputmode="numeric" min="0" step="1" value="1"></div>
+        <div><label for="f-isian">Isian (lembar/rangkap)</label><input id="f-isian" type="number" inputmode="numeric" min="0" step="1" value="1"></div>
+        <div><label for="f-qty">Qty (lembar)</label><input id="f-qty" type="number" inputmode="numeric" min="0" step="1" value="1"></div>
+        <div><label for="f-harga">Harga per lembar (Rp)</label><input id="f-harga" type="number" inputmode="numeric" min="0" step="any" value="0"></div>
+        <div><label for="f-tgl">Tgl</label><input id="f-tgl" type="date" required></div>
+        <div><label for="f-status">Status</label>
+          <select id="f-status"><option value="belum">Belum dibayar</option><option value="sudah">Sudah dibayar</option></select></div>
+        <div class="full hint">Qty otomatis = Rangkap × Isian (boleh diubah manual).</div>
+        <div class="full subtotal-box"><span>Subtotal</span><span id="f-subtotal">Rp0</span></div>
+        <div class="full row">
+          <button type="submit" class="btn primary" style="flex:1">Simpan</button>
+          <button type="button" class="btn" id="btnCancelEdit" hidden>Batal</button>
+        </div>
+      </div>
+    </form>
+    <datalist id="namaList"></datalist>
+    <datalist id="orderList"></datalist>
+  </section>
+
+  <!-- ========== DAFTAR ========== -->
+  <section id="view-list" class="view active">
+    <div class="card">
+      <div class="grid">
+        <div class="full"><input id="q" type="search" placeholder="Cari nama / order…"></div>
+        <div><select id="fStatus"><option value="">Semua status</option><option value="belum">Belum dibayar</option><option value="sudah">Sudah dibayar</option></select></div>
+        <div><input id="fMonth" type="month" title="Filter bulan"></div>
+      </div>
+      <div class="row" style="margin-top:10px;justify-content:space-between">
+        <span class="hint" id="listInfo"></span>
+        <button class="btn sm ok" id="btnPayAll" hidden>Tandai semua lunas</button>
+      </div>
+    </div>
+    <div id="list"></div>
+  </section>
+
+  <!-- ========== EKSPOR ========== -->
+  <section id="view-export" class="view">
+    <div class="card">
+      <h2>Ekspor JPG / PDF</h2>
+      <div class="grid">
+        <div class="full"><label for="e-nama">Nama pelanggan</label>
+          <select id="e-nama"><option value="">Semua pelanggan</option></select></div>
+        <div><label for="e-from">Dari tgl</label><input id="e-from" type="date"></div>
+        <div><label for="e-to">Sampai tgl</label><input id="e-to" type="date"></div>
+        <div class="full"><label for="e-status">Status</label>
+          <select id="e-status"><option value="">Semua</option><option value="belum">Belum dibayar</option><option value="sudah">Sudah dibayar</option></select></div>
+        <div class="full"><label for="e-title">Judul (opsional)</label><input id="e-title" placeholder="mis. nama toko fotokopi"></div>
+      </div>
+      <p class="hint">Isi laporan: Tgl, Order, Subtotal, Status.</p>
+      <canvas id="preview"></canvas>
+      <div class="row" style="margin-top:10px">
+        <button class="btn primary" id="btnJpg">⬇ JPG</button>
+        <button class="btn primary" id="btnPdf">⬇ PDF</button>
+        <button class="btn" id="btnShare" hidden>Bagikan…</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Cadangan data</h2>
+      <p class="hint">Data tersimpan di HP/browser ini saja. Buat cadangan rutin agar tidak hilang.</p>
+      <div class="row">
+        <button class="btn" id="btnBackup">Cadangkan (JSON)</button>
+        <button class="btn" id="btnRestore">Pulihkan</button>
+        <button class="btn" id="btnCsv">Ekspor CSV (Spreadsheet)</button>
+        <button class="btn" id="btnImportCsv">Impor CSV</button>
+        <input type="file" id="fileRestore" accept=".json,application/json" hidden>
+        <input type="file" id="fileCsv" accept=".csv,text/csv" hidden>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button data-view="list" class="active"><span>📋</span>Daftar</button>
+  <button data-view="form"><span>➕</span>Tambah</button>
+  <button data-view="export"><span>📤</span>Ekspor</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script src="jspdf.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
