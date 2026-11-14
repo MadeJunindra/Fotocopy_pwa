@@ -29,7 +29,7 @@ jobs:
           echo "Versi: $VERSION"
           sed -i "s/__APP_VERSION__/$VERSION/g" sw.js app.js
           mkdir -p _site
-          cp -r index.html app.js sw.js manifest.json jspdf.umd.min.js icon.svg icon-192.png icon-512.png fonts _site/
+          cp -r index.html app.js sync.js sw.js manifest.json jspdf.umd.min.js icon.svg icon-192.png icon-512.png fonts _site/
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

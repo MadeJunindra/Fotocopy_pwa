@@ -7,10 +7,17 @@ let data = load();
 function load() {
   try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; }
 }
-function save() {
+/** Simpan ke perangkat. `changed`/`deleted` = id yang berubah -> dikirim ke Google Sheets. */
+function save(changed = [], deleted = []) {
+  const now = Date.now();
+  changed.forEach(id => { const t = data.find(x => x.id === id); if (t) t.updated = now; });
+  persistLocal();
+  if (changed.length || deleted.length) Sync.queue(changed, deleted, now);
+  renderAll();
+}
+function persistLocal() {
   try { localStorage.setItem(KEY, JSON.stringify(data)); }
   catch { toast('Gagal menyimpan! Penyimpanan penuh/diblokir.'); }
-  renderAll();
 }
 function loadSettings() { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; } catch { return {}; } }
 function saveSettings(s) { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch {} }
@@ -101,11 +108,11 @@ $('#txForm').addEventListener('submit', (e) => {
   };
   t.subtotal = subtotalOf(t);
   const i = data.findIndex(x => x.id === t.id);
-  if (i >= 0) { data[i] = t; toast('Transaksi diperbarui'); }
+  if (i >= 0) { data[i] = { ...data[i], ...t }; toast('Transaksi diperbarui'); }
   else { t.created = Date.now(); data.push(t); toast('Transaksi disimpan'); }
   const s = loadSettings(); s.lastHarga = t.harga; saveSettings(s);
   const wasEdit = i >= 0;
-  save();
+  save([t.id]);
   if (wasEdit) { resetForm(); showView('list'); }
   else { // siap input berikutnya, nama & tgl tetap
     const nama = t.nama, tgl = t.tgl;
@@ -158,11 +165,11 @@ $('#list').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.toggle) {
     const t = data.find(x => x.id === b.dataset.toggle);
-    t.status = t.status === 'sudah' ? 'belum' : 'sudah'; save();
+    t.status = t.status === 'sudah' ? 'belum' : 'sudah'; save([t.id]);
   } else if (b.dataset.edit) editTx(b.dataset.edit);
   else if (b.dataset.del) {
     const t = data.find(x => x.id === b.dataset.del);
-    if (confirm(`Hapus transaksi "${t.order}" (${t.nama})?`)) { data = data.filter(x => x.id !== t.id); save(); toast('Dihapus'); }
+    if (confirm(`Hapus transaksi "${t.order}" (${t.nama})?`)) { data = data.filter(x => x.id !== t.id); save([], [t.id]); toast('Dihapus'); }
   }
 });
 ['#q', '#fMonth'].forEach(s => $(s).addEventListener('input', renderList));
@@ -174,7 +181,7 @@ document.querySelectorAll('#statusChips .chip').forEach(c => c.addEventListener(
 $('#btnPayAll').addEventListener('click', () => {
   const rows = filtered().filter(t => t.status !== 'sudah');
   if (!confirm(`Tandai ${rows.length} transaksi yang tampil sebagai sudah dibayar?`)) return;
-  rows.forEach(t => t.status = 'sudah'); save(); toast('Ditandai lunas');
+  rows.forEach(t => t.status = 'sudah'); save(rows.map(t => t.id)); toast('Ditandai lunas');
 });
 
 function renderSummary() {
@@ -399,7 +406,10 @@ $('#fileRestore').addEventListener('change', async (e) => {
     const arr = JSON.parse(await file.text());
     if (!Array.isArray(arr)) throw 0;
     if (!confirm(`Pulihkan ${arr.length} transaksi? Data sekarang (${data.length}) akan diganti.`)) return;
-    data = arr.map(t => ({ ...t, id: t.id || uid() })); save(); toast('Data dipulihkan');
+    const old = data.map(t => t.id);
+    data = arr.map(t => ({ ...t, id: t.id || uid() }));
+    const ids = new Set(data.map(t => t.id));
+    save([...ids], old.filter(id => !ids.has(id))); toast('Data dipulihkan');
   } catch { alert('File cadangan tidak valid.'); }
 });
 const CSV_HEAD = ['Nama','Order','Rangkap','Isian','Qty','Harga per lembar','Tgl','Subtotal','Status'];
@@ -435,7 +445,7 @@ $('#fileCsv').addEventListener('change', async (e) => {
     t.subtotal = subtotalOf(t); return t;
   });
   if (!confirm(`Tambahkan ${added.length} transaksi dari CSV?`)) return;
-  data.push(...added); save(); toast(`${added.length} transaksi diimpor`);
+  data.push(...added); save(added.map(t => t.id)); toast(`${added.length} transaksi diimpor`);
 });
 function parseCsv(text, sep) {
   const out = []; let row = [], cell = '', inQ = false;

@@ -143,6 +143,19 @@ nav.tabs button.fab.active{box-shadow:0 0 0 3px rgba(215,182,121,.3)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .update-bar{position:fixed;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:40;display:none;align-items:center;gap:12px;background:var(--card);color:var(--text);border:1px solid var(--gold);padding:10px 10px 10px 16px;border-radius:14px;box-shadow:var(--shadow-lg);font-weight:700;font-size:13.5px;width:max-content;max-width:calc(100% - 32px)}
 .update-bar.show{display:flex}
+.brand{justify-content:space-between}
+.brand>div:first-child{display:flex;align-items:center;gap:10px}
+.sync-pill{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#f4efe6;border-radius:999px;padding:6px 11px;font:700 11.5px var(--sans);cursor:pointer;white-space:nowrap}
+.sync-pill i{width:8px;height:8px;border-radius:50%;background:#8d96a6;flex:none}
+.sync-pill.ok i{background:#5fd39c;box-shadow:0 0 0 3px rgba(95,211,156,.2)}
+.sync-pill.busy i{background:var(--gold-2);animation:pulse 1s infinite}
+.sync-pill.warn i{background:#f0a868}
+.sync-pill.err i{background:#f0857c}
+@keyframes pulse{50%{opacity:.3}}
+.steps{margin:0 0 14px;padding-left:20px;color:var(--text);font-size:13.5px}
+.steps li{margin-bottom:6px}
+.steps code{background:var(--bg-2);padding:1px 6px;border-radius:6px;font-size:12.5px}
+.status-line{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--line);font-size:13.5px;font-weight:600;margin-bottom:12px}
 .version{text-align:center;color:var(--muted);font-size:11.5px;margin-top:6px}
 </style>
 </head>
@@ -151,8 +164,9 @@ nav.tabs button.fab.active{box-shadow:0 0 0 3px rgba(215,182,121,.3)}
 
 <header>
   <div class="brand">
-    <div class="logo">F</div>
-    <div><h1>Catatan Fotokopi</h1><small id="todayLabel"></small></div>
+    <div><div class="logo">F</div>
+    <div><h1>Catatan Fotokopi</h1><small id="todayLabel"></small></div></div>
+    <button class="sync-pill off" id="syncPill" title="Status database"><i></i><span>Belum terhubung</span></button>
   </div>
   <div class="hero">
     <div class="label">Belum dibayar</div>
@@ -248,6 +262,26 @@ nav.tabs button.fab.active{box-shadow:0 0 0 3px rgba(215,182,121,.3)}
       </div>
     </div>
 
+    <div class="card" id="syncCard">
+      <h2>Database Google Sheets</h2>
+      <p class="desc">Simpan semua transaksi ke spreadsheet Google Anda: aman walau HP hilang, dan bisa dipakai di beberapa perangkat.</p>
+      <div class="status-line"><span id="syncInfo">Data hanya tersimpan di perangkat ini.</span></div>
+      <div id="syncSetup">
+        <div class="grid">
+          <div class="full"><label for="s-url">Alamat Web App (Apps Script)</label>
+            <input id="s-url" type="url" inputmode="url" placeholder="https://script.google.com/macros/s/…/exec"></div>
+          <div class="full"><label for="s-token">Kata sandi (TOKEN)</label>
+            <input id="s-token" type="password" placeholder="Sama dengan TOKEN di Apps Script"></div>
+          <div class="full"><button class="btn primary block" id="btnConnect">Hubungkan</button></div>
+        </div>
+        <p class="hint" style="margin-top:12px">Belum punya alamatnya? Ikuti panduan <b>PANDUAN-DATABASE.md</b> (sekitar 5 menit, sekali saja).</p>
+      </div>
+      <div id="syncConnected" class="row" hidden>
+        <button class="btn primary" id="btnSyncNow" style="flex:1">Sinkron sekarang</button>
+        <button class="btn ghost" id="btnDisconnect">Putuskan</button>
+      </div>
+    </div>
+
     <div class="card">
       <h2>Cadangan Data</h2>
       <p class="desc">Data tersimpan di perangkat ini saja. Cadangkan secara rutin agar aman.</p>
@@ -276,5 +310,6 @@ nav.tabs button.fab.active{box-shadow:0 0 0 3px rgba(215,182,121,.3)}
 
 <script src="jspdf.umd.min.js"></script>
 <script src="app.js"></script>
+<script src="sync.js"></script>
 </body>
 </html>
