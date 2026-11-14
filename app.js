@@ -227,14 +227,12 @@ function renderReport(canvas, scale = 2) {
   const cols = [ { t: 'NO', w: 44, a: 'center' }, { t: 'TANGGAL', w: 124 },
     { t: 'ORDER', w: 0 }, { t: 'SUBTOTAL', w: 132, a: 'right' }, { t: 'STATUS', w: 136, a: 'center' } ];
   cols[2].w = W - PAD * 2 - cols.reduce((s, c) => s + c.w, 0);
-  const showName = !$('#e-nama').value;
   const ctx = canvas.getContext('2d');
   const LH = 20, CP = 12;
 
   ctx.font = `500 15px ${SANS}`;
   const layout = rows.map((t, i) => {
     const lines = wrapText(ctx, t.order, cols[2].w - CP * 2);
-    if (showName) lines.push('\u0001' + t.nama); // baris nama (abu-abu)
     return { t, i, lines, h: lines.length * LH + CP * 2 + 4 };
   });
   const title = $('#e-title').value.trim() || 'Catatan Fotokopi';
@@ -261,12 +259,14 @@ function renderReport(canvas, scale = 2) {
   ctx.fillText(title, PAD, 58);
   const f = $('#e-from').value, to = $('#e-to').value, st = $('#e-status').value;
   const periode = f || to ? `${f ? fmtTgl(f) : 'Awal'} – ${to ? fmtTgl(to) : 'Sekarang'}` : 'Semua tanggal';
-  const meta = [['PELANGGAN', $('#e-nama').value || 'Semua'], ['PERIODE', periode], ['STATUS', st ? statusLabel(st) : 'Semua']];
+  const label = $('#e-label').value.trim();
+  const meta = [...(label ? [['PELANGGAN', label]] : []), ['PERIODE', periode], ['STATUS', st ? statusLabel(st) : 'Semua']];
   let mx = PAD;
   meta.forEach(([k, v], i) => {
     ctx.fillStyle = 'rgba(244,239,230,.55)'; ctx.font = `700 11px ${SANS}`; ctx.fillText(k, mx, 124);
     ctx.fillStyle = '#f4efe6'; ctx.font = `600 15px ${SANS}`; ctx.fillText(v, mx, 142);
-    mx += i === 1 ? 260 : 220;
+    ctx.font = `600 15px ${SANS}`;
+    mx += Math.max(160, ctx.measureText(v).width + 48);
   });
   ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(244,239,230,.55)'; ctx.font = `600 12px ${SANS}`;
   ctx.fillText(`Dicetak ${fmtTgl(today())}`, W - PAD, 40); ctx.textAlign = 'left';
@@ -340,12 +340,14 @@ function roundRect(ctx, x, y, w, h, r) {
 function drawPreview() { renderReport($('#preview'), 1.5); }
 const fontsReady = Promise.all(['500 15px Jakarta','700 15px Jakarta','800 12px Jakarta','600 16px Fraunces'].map(f => document.fonts.load(f))).catch(() => {});
 fontsReady.then(() => { if ($('#view-export').classList.contains('active')) drawPreview(); });
-['#e-nama', '#e-from', '#e-to', '#e-status', '#e-title'].forEach(s => $(s).addEventListener('input', drawPreview));
+// Nama di laporan: ikut terisi saat memilih pelanggan, tapi boleh diubah / dikosongkan
+$('#e-nama').addEventListener('change', () => { $('#e-label').value = $('#e-nama').value; drawPreview(); });
+['#e-nama', '#e-from', '#e-to', '#e-status', '#e-title', '#e-label'].forEach(s => $(s).addEventListener('input', drawPreview));
 $('#e-title').value = loadSettings().title || '';
 $('#e-title').addEventListener('change', () => { const s = loadSettings(); s.title = $('#e-title').value.trim(); saveSettings(s); });
 
 function fileBase() {
-  const n = $('#e-nama').value; const slug = (n || 'semua').replace(/[^\w-]+/g, '_');
+  const n = $('#e-label').value.trim() || $('#e-nama').value; const slug = (n || 'semua').replace(/[^\w-]+/g, '_');
   return `fotokopi_${slug}_${today()}`;
 }
 function canvasBlob(c, type, q) { return new Promise(res => c.toBlob(res, type, q)); }
